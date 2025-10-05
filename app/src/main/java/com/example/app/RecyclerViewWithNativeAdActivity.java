@@ -88,9 +88,10 @@ public class RecyclerViewWithNativeAdActivity extends AppCompatActivity {
 
                 final List<String> data = new ArrayList<>();
 
-                try (InputStream is = new URL(url).openStream()) {
-                    if (is != null) {
-                        JsonReader reader = new JsonReader(new InputStreamReader(is));
+                try (InputStream is = new URL(url).openStream();
+                     InputStreamReader isr = is != null ? new InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8) : null;
+                     JsonReader reader = isr != null ? new JsonReader(isr) : null) {
+                    if (reader != null) {
                         reader.beginArray();
 
                         while (reader.peek() == JsonToken.STRING) {
