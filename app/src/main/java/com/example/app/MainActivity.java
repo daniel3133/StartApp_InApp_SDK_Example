@@ -13,6 +13,7 @@ import com.startapp.sdk.adsbase.StartAppAd;
 import com.startapp.sdk.adsbase.StartAppSDK;
 import com.startapp.sdk.adsbase.VideoListener;
 import com.startapp.sdk.adsbase.adlisteners.AdEventListener;
+import com.startapp.sdk.adsbase.adlisteners.AdDisplayListener;
 
 @SuppressLint("SetTextI18n")
 public class MainActivity extends AppCompatActivity {
@@ -27,9 +28,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showInterstitial(View view) {
-        startActivity(new Intent(this, OtherActivity.class));
+        final StartAppAd interstitial = new StartAppAd(this);
 
-        StartAppAd.showAd(this);
+        interstitial.loadAd(new AdEventListener() {
+            @Override
+            public void onReceiveAd(Ad ad) {
+                interstitial.showAd(new AdDisplayListener() {
+                    @Override
+                    public void adHidden(Ad ad) {
+                        startActivity(new Intent(MainActivity.this, OtherActivity.class));
+                    }
+
+                    @Override
+                    public void adDisplayed(Ad ad) { /* no-op */ }
+
+                    @Override
+                    public void adClicked(Ad ad) { /* no-op */ }
+
+                    @Override
+                    public void adNotDisplayed(Ad ad) {
+                        startActivity(new Intent(MainActivity.this, OtherActivity.class));
+                    }
+                });
+            }
+
+            @Override
+            public void onFailedToReceiveAd(Ad ad) {
+                startActivity(new Intent(MainActivity.this, OtherActivity.class));
+            }
+        });
     }
 
     public void showRewardedVideo(View view) {
