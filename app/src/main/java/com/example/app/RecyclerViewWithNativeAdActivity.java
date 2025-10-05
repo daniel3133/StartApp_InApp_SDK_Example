@@ -22,6 +22,7 @@ import com.startapp.sdk.adsbase.adlisteners.AdEventListener;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -88,21 +89,28 @@ public class RecyclerViewWithNativeAdActivity extends AppCompatActivity {
 
                 final List<String> data = new ArrayList<>();
 
-                try (InputStream is = new URL(url).openStream()) {
-                    if (is != null) {
-                        JsonReader reader = new JsonReader(new InputStreamReader(is));
-                        reader.beginArray();
+                HttpURLConnection connection = null;
+                try {
+                    connection = (HttpURLConnection) new URL(url).openConnection();
+                    connection.setConnectTimeout(10_000);
+                    connection.setReadTimeout(10_000);
+                    connection.setInstanceFollowRedirects(true);
 
+                    try (InputStream is = connection.getInputStream();
+                         JsonReader reader = new JsonReader(new InputStreamReader(is, "UTF-8"))) {
+                        reader.beginArray();
                         while (reader.peek() == JsonToken.STRING) {
                             data.add(reader.nextString());
                         }
-
                         reader.endArray();
                     }
                 } catch (RuntimeException | IOException ex) {
                     data.clear();
                     data.add(ex.toString());
                 } finally {
+                    if (connection != null) {
+                        connection.disconnect();
+                    }
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
